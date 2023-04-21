@@ -15,8 +15,12 @@ logger = get_logger(log, "test_leon")
 
 
 @pytest.fixture(scope="module", autouse=True)
-def minimal_db_initialization(request):
-    with ephemeral_session(ephemeral=True) as session:
+def minimal_db_initialization(request, setup_config):
+    _, _, engine = setup_config
+    session_factory = sessionmaker(bind=engine)
+    scoped = scoped_session(session_factory)
+
+    with ephemeral_session(scoped, engine, bind=engine) as session:
         yield session
 
 
@@ -60,7 +64,7 @@ def test_leon_simple(
 ):
     config, _, _ = setup_config
     job_id = insert_job(
-        minimal_db_initializaion, res=[(60, [("resource_id=4", "")])], properties=""
+        minimal_db_initialization, res=[(60, [("resource_id=4", "")])], properties=""
     )
     leon = Leon(config, logger, [str(job_id)])
     leon.run(minimal_db_initialization)
@@ -85,10 +89,10 @@ def test_leon_exterminate_jobid(
 ):
     config, _, _ = setup_config
     job_id = insert_job(
-        minimal_db_initializaion, res=[(60, [("resource_id=4", "")])], properties=""
+        minimal_db_initialization, res=[(60, [("resource_id=4", "")])], properties=""
     )
 
-    FragJob.create(job_id=job_id, state="LEON_EXTERMINATE")
+    FragJob.create(minimal_db_initialization,job_id=job_id, state="LEON_EXTERMINATE")
     print("job_id:" + str(job_id))
 
     leon = Leon(config, logger, [str(job_id)])
@@ -115,10 +119,10 @@ def test_leon_exterminate(
 ):
     config, _, _ = setup_config
     job_id = insert_job(
-        minimal_db_initializaion, res=[(60, [("resource_id=4", "")])], properties=""
+        minimal_db_initialization, res=[(60, [("resource_id=4", "")])], properties=""
     )
 
-    FragJob.create(job_id=job_id, state="LEON_EXTERMINATE")
+    FragJob.create(minimal_db_initialization,job_id=job_id, state="LEON_EXTERMINATE")
     print("job_id:" + str(job_id))
 
     leon = Leon(
@@ -141,7 +145,7 @@ def test_leon_get_jobs_to_kill_waiting(
 ):
     config, _, _ = setup_config
     job_id = insert_job(
-        minimal_db_initializaion,
+        minimal_db_initialization,
         res=[(60, [("resource_id=4", "")])],
         properties="",
         state="Waiting",
@@ -149,7 +153,7 @@ def test_leon_get_jobs_to_kill_waiting(
         info_type="123.123.123.123:1234",
     )
 
-    FragJob.create(job_id=job_id, state="LEON")
+    FragJob.create(minimal_db_initialization,job_id=job_id, state="LEON")
 
     leon = Leon(
         config,
@@ -170,13 +174,13 @@ def test_leon_get_jobs_to_kill_terminated(
 ):
     config, _, _ = setup_config
     job_id = insert_job(
-        minimal_db_initializaion,
+        minimal_db_initialization,
         res=[(60, [("resource_id=4", "")])],
         properties="",
         state="Terminated",
     )
 
-    FragJob.create(job_id=job_id, state="LEON")
+    FragJob.create(minimal_db_initialization, job_id=job_id, state="LEON")
 
     leon = Leon(
         config,
@@ -204,7 +208,7 @@ def test_leon_get_jobs_to_kill_noop(
         types=["noop"],
     )
 
-    FragJob.create(job_id=job_id, state="LEON")
+    FragJob.create(minimal_db_initialization, job_id=job_id, state="LEON")
 
     leon = Leon(
         config,
@@ -225,13 +229,13 @@ def test_leon_get_jobs_to_kill_running(
 ):
     config, _, _ = setup_config
     job_id = insert_job(
-        minimal_db_initializaion,
+        minimal_db_initialization,
         res=[(60, [("resource_id=4", "")])],
         properties="",
         state="Running",
     )
 
-    FragJob.create(job_id=job_id, state="LEON")
+    FragJob.create(minimal_db_initialization, job_id=job_id, state="LEON")
 
     leon = Leon(
         config,
@@ -251,16 +255,16 @@ def test_leon_get_jobs_to_kill_running_deploy(
 ):
     config, _, _ = setup_config
     job_id = insert_job(
-        minimal_db_initializaion,
+        minimal_db_initialization,
         res=[(60, [("resource_id=4", "")])],
         properties="",
         state="Running",
         types=["deploy"],
     )
 
-    assign_resources(job_id)
+    assign_resources(minimal_db_initialization, job_id)
 
-    FragJob.create(job_id=job_id, state="LEON")
+    FragJob.create(minimal_db_initialization, job_id=job_id, state="LEON")
 
     leon = Leon(
         config,

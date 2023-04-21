@@ -32,8 +32,12 @@ from oar.lib.job_handling import (
     set_running_date,
 )
 from oar.lib.logging import get_logger
+from oar.lib.globals import init_oar
 
-logger = get_logger("oar.modules.leon", forward_stderr=True)
+_,_,logger = init_oar()
+
+logger = get_logger(logger, "oar.modules.leon", forward_stderr=True)
+
 logger.info("Start Leon")
 
 
