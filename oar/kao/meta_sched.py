@@ -72,6 +72,7 @@ from oar.lib.queue import get_queues_groupby_priority, stop_queue
 from oar.lib.tools import PIPE, TimeoutExpired, duration_to_sql, local_to_sql
 from oar.modules.hulot import HulotClient
 
+#FIXME global config
 config, _, log = init_oar()
 
 # Constant duration time of a besteffort job *)
@@ -766,7 +767,7 @@ def call_internal_scheduler(
     )
 
 
-def nodes_energy_saving(current_time_sec):
+def nodes_energy_saving(session, config, current_time_sec):
     """
     Energy saving mode.
 
@@ -792,7 +793,7 @@ def nodes_energy_saving(current_time_sec):
         idle_duration = int(config["SCHEDULER_NODE_MANAGER_IDLE_TIME"])
         sleep_duration = int(config["SCHEDULER_NODE_MANAGER_SLEEP_TIME"])
 
-        idle_nodes = search_idle_nodes(current_time_sec)
+        idle_nodes = search_idle_nodes(session, current_time_sec)
         tmp_time = current_time_sec - idle_duration
 
         # Determine nodes to halt
@@ -800,10 +801,10 @@ def nodes_energy_saving(current_time_sec):
         for node, idle_duration in idle_nodes.items():
             if idle_duration < tmp_time:
                 # Search if the node has enough time to sleep
-                tmp = get_next_job_date_on_node(node)
+                tmp = get_next_job_date_on_node(session, node)
                 if (tmp is None) or (tmp - sleep_duration > current_time_sec):
                     # Search if node has not been woken up recently
-                    wakeup_date = get_last_wake_up_date_of_node(node)
+                    wakeup_date = get_last_wake_up_date_of_node(session, node)
                     if (wakeup_date is None) or (wakeup_date < tmp_time):
                         nodes_2_halt.append(node)
 
@@ -814,7 +815,7 @@ def nodes_energy_saving(current_time_sec):
         # Get nodes which the scheduler wants to schedule jobs to,
         # but which are in the Absent state, to wake them up
         wakeup_time = int(config["SCHEDULER_NODE_MANAGER_WAKEUP_TIME"])
-        nodes_2_wakeup = get_gantt_hostname_to_wake_up(current_time_sec, wakeup_time)
+        nodes_2_wakeup = get_gantt_hostname_to_wake_up(session, current_time_sec, wakeup_time)
 
     return {"halt": nodes_2_halt, "wakeup": nodes_2_wakeup}
 
@@ -1027,7 +1028,7 @@ def meta_schedule(session, config, mode="internal", plt=Platform()):
     #
     if ("ENERGY_SAVING_MODE" in config) and config["ENERGY_SAVING_MODE"] != "":
         if config["ENERGY_SAVING_MODE"] == "metascheduler_decision_making":
-            nodes_2_change = nodes_energy_saving(current_time_sec)
+            nodes_2_change = nodes_energy_saving(session, config, current_time_sec)
         elif config["ENERGY_SAVING_MODE"] == "batsim_scheduler_proxy_decision_making":
             nodes_2_change = batsim_sched_proxy.retrieve_pstate_changes_to_apply()
         else:
@@ -1065,7 +1066,6 @@ def meta_schedule(session, config, mode="internal", plt=Platform()):
 
         # Command Hulot to wake up selected nodes
         nodes_2_wakeup = nodes_2_change["wakeup"]
-
         if nodes_2_wakeup != []:
             logger.debug("Awaking some nodes: " + str(nodes_2_change))
             # Using the built-in energy saving module to wake up nodes

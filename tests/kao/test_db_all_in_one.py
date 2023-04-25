@@ -96,6 +96,8 @@ def active_energy_saving(request, setup_config):
     config["SCHEDULER_NODE_MANAGER_WAKEUP_TIME"] = "30"
     config["SCHEDULER_NODE_MANAGER_WAKE_UP_CMD"] = "wakeup_node_command"
 
+    yield config
+
     def teardown():
         # config.clear()
         # config.update(config.DEFAULT_CONFIG)
@@ -110,7 +112,6 @@ def active_energy_saving(request, setup_config):
 
     request.addfinalizer(teardown)
 
-    yield config
 
 
 def period_weekstart():
@@ -141,6 +142,7 @@ def insert_and_sched_ar(session, config, start_time, walltime=60):
 
 
 def assign_node_list(nodes):
+    print("lkjlmjsqdmqjdsfqlmfdks")
     global node_list
     node_list = nodes
 
