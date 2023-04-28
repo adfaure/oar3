@@ -24,16 +24,15 @@ from rich.padding import Padding
 from rich.panel import Panel
 from rich.progress import BarColumn, Progress, TextColumn
 from rich.table import Column, Table
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 import oar.lib.tools as tools
 from oar import VERSION
-from oar.lib.globals import init_oar
 from oar.lib.database import EngineConnector
-from oar.lib.models import Model
-from sqlalchemy.orm import scoped_session, sessionmaker
 from oar.lib.event import get_events_for_hostname_from
+from oar.lib.globals import init_oar
 from oar.lib.job_handling import insert_job
-from oar.lib.models import AssignedResource, Job, Resource
+from oar.lib.models import AssignedResource, Job, Model, Resource
 from oar.lib.node import (
     get_all_network_address,
     get_resources_of_nodes,
@@ -224,8 +223,7 @@ def print_resources_table(
 
 
 def print_resources_nodes_infos(
-    session,
-    cmd_ret, properties, show_all_properties, resources, nodes, json
+    session, cmd_ret, properties, show_all_properties, resources, nodes, json
 ):
     # import pdb; pdb.set_trace()
     if nodes:
@@ -439,12 +437,12 @@ def oarnodes(
         print_all_hostnames(nodes, json)
     elif resource_ids or sql:
         resources = get_resources_from_ids(resource_ids)
-        print_resources_nodes_infos(session,
-            cmd_ret, properties, show_all_properties, resources, None, json
+        print_resources_nodes_infos(
+            session, cmd_ret, properties, show_all_properties, resources, None, json
         )
     elif nodes:
-        print_resources_nodes_infos(session,
-            cmd_ret, properties, show_all_properties, None, nodes, json
+        print_resources_nodes_infos(
+            session, cmd_ret, properties, show_all_properties, None, nodes, json
         )
     else:
         cmd_ret.print_("No nodes to display...")

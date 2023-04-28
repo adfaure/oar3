@@ -37,7 +37,9 @@ def test_version(minimal_db_initialization, setup_config):
 
 def test_oarnodes_event_no_date(minimal_db_initialization, setup_config):
     config, _, _ = setup_config
-    add_new_event_with_host(minimal_db_initialization, "TEST", 1, "fake_event", ["localhost"])
+    add_new_event_with_host(
+        minimal_db_initialization, "TEST", 1, "fake_event", ["localhost"]
+    )
 
     runner = CliRunner()
     result = runner.invoke(
@@ -51,7 +53,9 @@ def test_oarnodes_event_no_date(minimal_db_initialization, setup_config):
 
 def test_oarnodes_event(minimal_db_initialization, setup_config):
     config, _, _ = setup_config
-    add_new_event_with_host(minimal_db_initialization,"TEST", 1, "fake_event", ["localhost"])
+    add_new_event_with_host(
+        minimal_db_initialization, "TEST", 1, "fake_event", ["localhost"]
+    )
 
     runner = CliRunner()
     result = runner.invoke(
@@ -66,7 +70,9 @@ def test_oarnodes_event(minimal_db_initialization, setup_config):
 
 def test_oarnodes_event_json(minimal_db_initialization, setup_config):
     config, _, _ = setup_config
-    add_new_event_with_host(minimal_db_initialization,"TEST", 1, "fake_event", ["localhost"])
+    add_new_event_with_host(
+        minimal_db_initialization, "TEST", 1, "fake_event", ["localhost"]
+    )
     runner = CliRunner()
     result = runner.invoke(
         cli,
